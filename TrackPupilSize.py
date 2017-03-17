@@ -2,7 +2,7 @@
 
 import astropy.units as u
 from astropy.time import Time
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz
+from astropy.coordinates import SkyCoord, EarthLocation, AltAz, FK5
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -26,6 +26,7 @@ class ObservationBlock(object):
         if isinstance(StarName,str):
             self.StarName = StarName
             self.StarCoo =  SkyCoord.from_name(StarName)
+            print('Identified Star coordinates as {0}'.format(self.StarCoo))
         elif isinstance(StarName,SkyCoord):
             self.StarName = 'your star'
             self.StarCoo =  StarName
@@ -65,7 +66,7 @@ class ObservationBlock(object):
     def calculate_ZenithCrossTime(self,ApproxTime,StarCoo = None):
         """ Returns the time at which star will cross Zenith """
         StarCoo = StarCoo or self.StarCoo
-        HA_toStar = ApproxTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.ra
+        HA_toStar = ApproxTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.transform_to(FK5(equinox=ApproxTime)).ra
         ZenithCrossTime = ApproxTime - HA_toStar.hour *u.hour 
         print('{0} will cross zenith at {1}'.format(self.StarName,ZenithCrossTime))
 
