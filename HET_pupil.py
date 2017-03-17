@@ -6,6 +6,7 @@ from shapely.ops import transform
 import numpy as np
 import matplotlib.pyplot as plt
 
+import HETparams
 
 class PrimaryMirror(object):
     """ This object is HET's Primary mirror """
@@ -14,10 +15,10 @@ class PrimaryMirror(object):
         # all the coordinates below are on the curved specrical surface of the primary mirrior.
         # so it is a 2D manifold embeded in the 3d world.
 
-        self.SegmentMirrorApothem = 0.5  # meters
+        self.SegmentMirrorApothem = HETparams.SegmentMirrorApothem
 
         # Gaps between mirros for creating the Primary mirror Honey comb grid
-        self.Gap = 0.011  # 6.2 to 15.8 mm # 11 mm on average
+        self.Gap = HETparams.Gap
         self.ColumnGap = self.Gap*np.sqrt(3)/2.
 
 
@@ -32,7 +33,7 @@ class PrimaryMirror(object):
         self.PrimaryMirrorSegmentsList, self.SegMirrorIndexDic = self.create_primarymirror_segments_and_gridindx(self.PrimaryMirrorGrid)
         
         # Optinnaly create a list of Bad Mirror segments which has dropped out of the allignemnt
-        self.BadMirrorSegmentCoords = [(+3,7),(+1,7)]  # Format: (+/- column index, row index)  # where row index 0 is the bottom most segment
+        self.BadMirrorSegmentCoords = HETparams.BadMirrorSegmentCoords
 
         #Union the segments to create a full single Primary mirror of HET
         self.PrimaryMirror = self.generate_combined_primary_mirror(self.PrimaryMirrorSegmentsList,self.BadMirrorSegmentCoords)
@@ -135,15 +136,12 @@ class PrimaryMirror(object):
 class Pupil(object):
     """ Illumintaed Active Pupil of HET """
     def __init__(self):
-        self.PupilDia = 10.0 # meters diameter
-        self.CentralShadowDiaWFC = 4.5 # meter dia
-        self.BeamPosition = 1.8 # meters on both side
-        self.BeamWidth = 0.64 # meters
+        self.PupilDia = HETparams.PupilDia
+        self.CentralShadowDiaWFC = HETparams.CentralShadowDiaWFC
+        self.BeamPosition = HETparams.BeamPosition
+        self.BeamWidth = HETparams.BeamWidth
 
         self.FullPupilShape = self.create_illuminated_pupil()
-
-        self.RadiusOfCurvatureHETprimary = 26.164 # meters  Radius of curvature of HET primary mirror
-
 
     def create_illuminated_pupil(self,PupilDia=None,CentralShadowDiaWFC =None,BeamPosition= None, BeamWidth = None):
         """ Returns the full cirvular illuminated pupil with all the secondary obscurations """
@@ -168,7 +166,7 @@ class Pupil(object):
         PupilShape = PupilShape.difference(SupportBeams)  # Add shadow of the tracker
         return PupilShape
 
-    def projected_mirror_shape(self, Mirror, xcenter, ycenter, radius_curv):
+    def projected_mirror_shape(self, Mirror, xcenter, ycenter, radius_curv = HETparams.RadiusOfCurvatureHETprimary):
         """ Returns the projected shape of the Mirror sitting on the spehere of radius of curvature radius_curv.
         The projection plane is the plane prependicular to line connecteding (xcenter,ycenter) and center of curvature of mirror
         """
@@ -202,7 +200,7 @@ class Pupil(object):
         ShiftedPupil = translate(PupilShape,xoff=xoff,yoff=yoff)
         
         if doMirrorCurvProjection: # Apply the mirror curvature projection
-            PrimaryMirror = self.projected_mirror_shape(PrimaryMirror, xoff, yoff, self.RadiusOfCurvatureHETprimary)
+            PrimaryMirror = self.projected_mirror_shape(PrimaryMirror, xoff, yoff)
 
         EffectivePupil = ShiftedPupil.intersection(PrimaryMirror)
         return EffectivePupil

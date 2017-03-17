@@ -10,10 +10,8 @@ import sys
 from scipy import interpolate
 import matplotlib.pyplot as plt
 
-McDonaldObservatory = EarthLocation.of_site(u'mcdonald')
-HET_FixedAlt = 55 *u.deg
-Tracker_Radius = 8.4 *u.deg
-RadiusOfCurvatureHETprimary = 26.164 # meters  Radius of curvature of HET primary mirror
+import HETparams
+
 
 def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
     """ 
@@ -34,8 +32,8 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
         else:
             time = ZenithCrossTime + deltatime*u.hour
 
-        AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time,location=McDonaldObservatory))
-        AltDistance = AltAz_ofStar.alt - HET_FixedAlt
+        AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time,location=HETparams.McDonaldObservatory))
+        AltDistance = AltAz_ofStar.alt - HETparams.HET_FixedAlt
         return np.abs(AltDistance.value)
 
     # Minimise time offset to reach as close to HET altitude
@@ -46,7 +44,7 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
     else:
         time_of_minimum_distance = ZenithCrossTime + minimal_time.x[0] *u.hour         
 
-    AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time_of_minimum_distance,location=McDonaldObservatory))
+    AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time_of_minimum_distance,location=HETparams.McDonaldObservatory))
 
     return AltAz_ofStar.az, distance_to_HETAlt(minimal_time.x[0]), time_of_minimum_distance
 
@@ -55,7 +53,7 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
 
 def start_and_end_of_tracktime(TransitTime,StarCoo,TelescopeAltAz,TrackerRad=None):
     """ Returns the starting time and ending time corresponding to star entering and leaving the Tracker Radius circle """
-    TrackerRad = TrackerRad or Tracker_Radius  # Set default to global Tracker_Radius
+    TrackerRad = TrackerRad or HETparams.Tracker_Radius  # Set default to global HETparams.Tracker_Radius
 
     def distance_to_TelescopeTrackerCircle(deltatime,finding_start=True):
         """ deltatime : (+ve float) in units of hours. finding_start: True to find the startinng time, False for finding end time """
@@ -64,7 +62,7 @@ def start_and_end_of_tracktime(TransitTime,StarCoo,TelescopeAltAz,TrackerRad=Non
         else:
             time = TransitTime + deltatime*u.hour
 
-        AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time,location=McDonaldObservatory))
+        AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time,location=HETparams.McDonaldObservatory))
         distance_to_HETAltAz = AltAz_ofStar.separation(TelescopeAltAz)
         return np.abs(np.abs(distance_to_HETAltAz.value) - TrackerRad.value)
 
@@ -94,7 +92,7 @@ def Tracker_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Tel
     Track_Duration = Track_EndTime - Track_StartTime
     Epochs_array = Track_StartTime + np.linspace(0,1,No_of_epochs) * Track_Duration
     
-    frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=McDonaldObservatory)
+    frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=HETparams.McDonaldObservatory)
     AltAzs_ofStarDuringTrack =  StarCoo.transform_to(frames_DuringTheTrack)
 
     Xoff_values = [((altaz.az - TelescopePark_AltAz.az)*np.cos(altaz.alt)).value * Deg2Meter_Scale for altaz in AltAzs_ofStarDuringTrack]
@@ -121,11 +119,11 @@ def pupil_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Teles
     Track_Duration = Track_EndTime - Track_StartTime
     Epochs_array = Track_StartTime + np.linspace(0,1,No_of_epochs) * Track_Duration
     
-    frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=McDonaldObservatory)
+    frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=HETparams.McDonaldObservatory)
     AltAzs_ofStarDuringTrack =  StarCoo.transform_to(frames_DuringTheTrack)
 
-    pXoff_values = [((altaz.az - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
-    pYoff_values = [(altaz.alt - TelescopePark_AltAz.alt).radian * RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
+    pXoff_values = [((altaz.az - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * HETparams.RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
+    pYoff_values = [(altaz.alt - TelescopePark_AltAz.alt).radian * HETparams.RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
     time_seconds = [timedelta.sec for timedelta in  Epochs_array - Transit_time]
     
     pXoff_calculator = interpolate.interp1d(time_seconds, pXoff_values, kind='cubic',bounds_error=True)
@@ -141,7 +139,7 @@ if __name__ == "__main__":
 
     CurrentTime = Time.now()
     # First calculate the Zenith corssing time of the star
-    HA_toStar = CurrentTime.sidereal_time('apparent',longitude=McDonaldObservatory.longitude) - StarCoo.ra
+    HA_toStar = CurrentTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.ra
     ZenithCrossTime = CurrentTime - HA_toStar.hour *u.hour 
 
     print('{0} will cross zenith at {1}'.format(StarName,ZenithCrossTime))
@@ -150,17 +148,17 @@ if __name__ == "__main__":
     Optimal_Azimuth, min_alt_delta, Transit_time = find_HET_optimal_azimuth(StarCoo,ZenithCrossTime)
 
     # If the minimium altitude difference is beyoud tracker radius, exit
-    if min_alt_delta > Tracker_Radius.value :
+    if min_alt_delta > HETparams.Tracker_Radius.value :
         print('This star {0} is never observable with HET'.format(StarName))
         sys.exit(1)
 
     print('Optimal Azimuth to park telescope is at: {0}'.format(Optimal_Azimuth))
 
 
-    TelescopePark_AltAz = AltAz(az=Optimal_Azimuth, alt=HET_FixedAlt)
+    TelescopePark_AltAz = AltAz(az=Optimal_Azimuth, alt=HETparams.HET_FixedAlt)
 
     print('Calculating Track begin and End time..')
-    Track_StartTime, Track_EndTime = start_and_end_of_tracktime(Transit_time,StarCoo,TelescopePark_AltAz,Tracker_Radius)
+    Track_StartTime, Track_EndTime = start_and_end_of_tracktime(Transit_time,StarCoo,TelescopePark_AltAz,HETparams.Tracker_Radius)
     print('Duration of Track length = {0.sec} seconds'.format(Track_EndTime - Track_StartTime))
 
     print("Calculating the Tracker's tracks..")
@@ -181,28 +179,28 @@ if __name__ == "__main__":
 
     for dec,StarCoo in zip(DecRange,StarList):
         # First calculate the Zenith corssing time of the star
-        HA_toStar = CurrentTime.sidereal_time('apparent',longitude=McDonaldObservatory.longitude) - StarCoo.ra
+        HA_toStar = CurrentTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.ra
         ZenithCrossTime = CurrentTime - HA_toStar.hour *u.hour 
 
         print('Calculating optimal Azimuth and transit time..')
         Optimal_Azimuth, min_alt_delta, Transit_time = find_HET_optimal_azimuth(StarCoo,ZenithCrossTime)
 
         # If the minimium altitude difference is beyond tracker radius, skip
-        if min_alt_delta > Tracker_Radius.value :
+        if min_alt_delta > HETparams.Tracker_Radius.value :
             print('This star {0} is never observable with HET'.format(StarName))
             continue
 
         print('Optimal Azimuth to park telescope is at: {0}'.format(Optimal_Azimuth))
 
 
-        TelescopePark_AltAz = AltAz(az=Optimal_Azimuth, alt=HET_FixedAlt)
+        TelescopePark_AltAz = AltAz(az=Optimal_Azimuth, alt=HETparams.HET_FixedAlt)
 
         print('Calculating Track begin and End time..')
-        Track_StartTime, Track_EndTime = start_and_end_of_tracktime(Transit_time,StarCoo,TelescopePark_AltAz,Tracker_Radius)
+        Track_StartTime, Track_EndTime = start_and_end_of_tracktime(Transit_time,StarCoo,TelescopePark_AltAz,HETparams.Tracker_Radius)
         print('Duration of Track length = {0.sec} seconds'.format(Track_EndTime - Track_StartTime))
 
-        HAstart = Track_StartTime.sidereal_time('apparent',longitude=McDonaldObservatory.longitude) - StarCoo.ra
-        HAend = Track_EndTime.sidereal_time('apparent',longitude=McDonaldObservatory.longitude) - StarCoo.ra
+        HAstart = Track_StartTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.ra
+        HAend = Track_EndTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.ra
 
         Dec2plotList.append(dec)
         HAstart2plotList.append(np.abs(HAstart.value))

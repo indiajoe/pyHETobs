@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 import numpy as np
 import matplotlib.pyplot as plt
 
+import HETparams
 import HET_Tracker 
 import HET_pupil
 
@@ -46,7 +47,7 @@ class ObservationBlock(object):
         # Calculating optimal Azimuth and transit time..
         self.Optimal_Azimuth, self.Transit_time = self.calculate_optimalAz_TrackTransit(self.StarCoo,
                                                                                         self.ZenithCrossTime)
-        self.TelescopePark_AltAz = AltAz(az=self.Optimal_Azimuth, alt=HET_Tracker.HET_FixedAlt)
+        self.TelescopePark_AltAz = AltAz(az=self.Optimal_Azimuth, alt=HETparams.HET_FixedAlt)
         
         #Calculating Track begin and End time..
         self.Track_StartTime, self.Track_EndTime = HET_Tracker.start_and_end_of_tracktime(self.Transit_time,self.StarCoo,self.TelescopePark_AltAz)
@@ -64,7 +65,7 @@ class ObservationBlock(object):
     def calculate_ZenithCrossTime(self,ApproxTime,StarCoo = None):
         """ Returns the time at which star will cross Zenith """
         StarCoo = StarCoo or self.StarCoo
-        HA_toStar = ApproxTime.sidereal_time('apparent',longitude=HET_Tracker.McDonaldObservatory.longitude) - StarCoo.ra
+        HA_toStar = ApproxTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.ra
         ZenithCrossTime = ApproxTime - HA_toStar.hour *u.hour 
         print('{0} will cross zenith at {1}'.format(self.StarName,ZenithCrossTime))
 
@@ -80,7 +81,7 @@ class ObservationBlock(object):
         Optimal_Azimuth, min_alt_delta, Transit_time = HET_Tracker.find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track)
 
         # If the minimium altitude difference is beyoud tracker radius, exit
-        if min_alt_delta > HET_Tracker.Tracker_Radius.value :
+        if min_alt_delta > HETparams.Tracker_Radius.value :
             print('ERROR: I am sorry to break this sad news to you..')
             print('This star {0} is never observable with HET'.format(self.StarName))
             print('Closest approch to HET elevation is {0}'.format(min_alt_delta))
