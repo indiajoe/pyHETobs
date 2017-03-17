@@ -1,6 +1,8 @@
 """ This script is to calculate the varying pupil of HET """
 from shapely.geometry import Polygon, Point
 from shapely.affinity import translate, rotate
+from shapely.ops import transform
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -9,6 +11,9 @@ class PrimaryMirror(object):
     """ This object is HET's Primary mirror """
     def __init__(self):
         """ Create the primary mirror of HET """
+        # all the coordinates below are on the curved specrical surface of the primary mirrior.
+        # so it is a 2D manifold embeded in the 3d world.
+
         self.SegmentMirrorApothem = 0.5  # meters
 
         # Gaps between mirros for creating the Primary mirror Honey comb grid
@@ -137,6 +142,9 @@ class Pupil(object):
 
         self.FullPupilShape = self.create_illuminated_pupil()
 
+        self.RadiusOfCurvatureHETprimary = 26.164 # meters  Radius of curvature of HET primary mirror
+
+
     def create_illuminated_pupil(self,PupilDia=None,CentralShadowDiaWFC =None,BeamPosition= None, BeamWidth = None):
         """ Returns the full cirvular illuminated pupil with all the secondary obscurations """
         PupilDia = PupilDia or self.PupilDia 
@@ -160,18 +168,42 @@ class Pupil(object):
         PupilShape = PupilShape.difference(SupportBeams)  # Add shadow of the tracker
         return PupilShape
 
-    def EffectiveActivePupil(self,PrimaryMirror, xoff=0,yoff=0, PupilShape=None):
+    def projected_mirror_shape(self, Mirror, xcenter, ycenter, radius_curv):
+        """ Returns the projected shape of the Mirror sitting on the spehere of radius of curvature radius_curv.
+        The projection plane is the plane prependicular to line connecteding (xcenter,ycenter) and center of curvature of mirror
+        """
+        def transform_func(x,y):
+            """ Transformation function for projection """
+            r = np.sqrt((x-xcenter)**2 + (y-ycenter)**2) # radial distance from center od the projection
+            r_t =  radius_curv * np.sin(r/radius_curv)  # radial distance in projected plane.
+            
+            x_t = r_t * x/r   # new projected x and y distance in plane
+            y_t = r_t * y/r   
+
+            return (x_t, y_t)
+
+        # Apply the transformation function to the Mirror shape and return it.
+        return transform(transform_func, Mirror)
+
+    def EffectiveActivePupil(self,PrimaryMirror, xoff=0,yoff=0, PupilShape=None, doMirrorCurvProjection = True):
         """ 
         Input: 
              xoff : X position offset of pupil on the Primarry mirror (unit in meters)
              yoff : Y position offset of pupil on the Primarry mirror (unit in meters)
-             Note - xoff and yoff are not same as tracker position. There is a multiplicative factor (? 2) due to ttilt of the tracker as it moves
+             Note - xoff and yoff are not same as tracker position. There is a multiplicative factor (~ 2) since it is half way between center of curvature and mirror.
+
+             PupilShape: The pupil projected on to primary mirror. (by default uses self.FullPupilShape)
+             doMirrorCurvProjection = True , project the primary mirror to the prependicular plane seen by the star for calculating effective area
 
         Returns the effective Active Pupil shape for a given pupil position by shifting and intersecting with Primary mirror"""
         if PupilShape is None:
             PupilShape = self.FullPupilShape
 
         ShiftedPupil = translate(PupilShape,xoff=xoff,yoff=yoff)
+        
+        if doMirrorCurvProjection: # Apply the mirror curvature projection
+            PrimaryMirror = self.projected_mirror_shape(PrimaryMirror, xoff, yoff, self.RadiusOfCurvatureHETprimary)
+
         EffectivePupil = ShiftedPupil.intersection(PrimaryMirror)
         return EffectivePupil
 
