@@ -8,15 +8,11 @@ import numpy as np
 from scipy import optimize
 import sys
 from scipy import interpolate
-from multiprocessing import Pool
 import matplotlib.pyplot as plt
 
-McDonaldObservatory = EarthLocation.of_site('mcdonald')
+McDonaldObservatory = EarthLocation.of_site(u'mcdonald')
 HET_FixedAlt = 55 *u.deg
 Tracker_Radius = 8.4 *u.deg
-
-StarName = '2MASS J23062928-0502285'  # TRAPIST-1
-StarCoo = SkyCoord.from_name(StarName)
 
 
 def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
@@ -55,8 +51,12 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
     return AltAz_ofStar.az, distance_to_HETAlt(minimal_time.x[0]), time_of_minimum_distance
 
 
-def start_and_end_of_tracktime(TransitTime,StarCoo,TelescopeAltAz,TrackerRad):
+
+
+def start_and_end_of_tracktime(TransitTime,StarCoo,TelescopeAltAz,TrackerRad=None):
     """ Returns the starting time and ending time corresponding to star entering and leaving the Tracker Radius circle """
+    TrackerRad = TrackerRad or Tracker_Radius  # Set default to global Tracker_Radius
+
     def distance_to_TelescopeTrackerCircle(deltatime,finding_start=True):
         """ deltatime : (+ve float) in units of hours. finding_start: True to find the startinng time, False for finding end time """
         if finding_start :
@@ -84,6 +84,7 @@ def Tracker_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Tel
     Returns: two functions of time, namely Xoff_calculator and Yoff_calculator 
     They return Xoff and Yoff in units of meters for and input offset time from TransitTime.
     input time should be in seconds to thie function.
+    Transit_time defines the zero epoch of time for the functions.
     """
     Deg2Meter_Scale = 1/4.37997  # Taken from operaz3.f code
 
@@ -105,9 +106,32 @@ def Tracker_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Tel
 
     return Xoff_calculator, Yoff_calculator
 
+def pupil_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, TelescopePark_AltAz, StarCoo):
+    """ 
+    Returns: two functions of time, namely pXoff_calculator and pYoff_calculator 
+    They return illuminated pupil's Xoff and Yoff positions on primry mirror in units of meters for and input offset time from TransitTime.
+    input time should be in seconds to this function.
+    Transit_time defines the zero epoch of time for the functions.
+    """
+    # First generate the tracker motion functions
+    TXoff_calculator, TYoff_calculator = Tracker_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, TelescopePark_AltAz, StarCoo)
+
+    # According to operaz3.f 
+    # Since tracker both tilts and moves, the footprint of the pupil on the mirror moves double.
+
+    PupilShiftFactor = 2  
+
+    pXoff_calculator = lambda t : PupilShiftFactor * TXoff_calculator(t)
+    pYoff_calculator = lambda t : PupilShiftFactor * TYoff_calculator(t)
+
+    return pXoff_calculator, pYoff_calculator
+
 
 #######################################################
 if __name__ == "__main__":
+    StarName = '2MASS J23062928-0502285'  # TRAPPIST-1
+    StarCoo = SkyCoord.from_name(StarName)
+
     CurrentTime = Time.now()
     # First calculate the Zenith corssing time of the star
     HA_toStar = CurrentTime.sidereal_time('apparent',longitude=McDonaldObservatory.longitude) - StarCoo.ra
@@ -136,8 +160,9 @@ if __name__ == "__main__":
     Xoff_calculator, Yoff_calculator = Tracker_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, TelescopePark_AltAz, StarCoo)
 
 
-    ################
-    # Plotting of toilet seat
+    ################################################################################
+    # Ploting of toilet seat of target accessibility locus graph
+    ################################################################################
 
     DecRange = np.concatenate([np.arange(-15,5,0.5), np.linspace(5,55,50/2), np.arange(55,75,0.5)])
     StarList = [SkyCoord(0.0*u.deg, dec*u.deg, frame='icrs') for dec in DecRange]
@@ -179,6 +204,8 @@ if __name__ == "__main__":
 
     #Mask out bad points in the edges of dec in EndTrack which is not valid 
     Mask = np.array(HAend2plotList) > 12
+    # Also Mask out initial few points which becme 24 due to error/noise
+    Mask[0:4] = False
     plt.plot(24-np.array(HAend2plotList)[Mask],np.array(Dec2plotList)[Mask],'k')
     plt.plot(24-np.array(HAstart2plotList),Dec2plotList,'k')
     plt.plot(np.array(HAend2plotList)[Mask]-24,np.array(Dec2plotList)[Mask],'k')
@@ -186,5 +213,6 @@ if __name__ == "__main__":
     plt.xlabel('HA (hours)')
     plt.ylabel('Declination (deg)')
     plt.grid()
-    plt.save('HET_target_accessibility_locus.png')
+    plt.savefig('HET_target_accessibility_locus.png')
     plt.show()
+    ################################################################################
