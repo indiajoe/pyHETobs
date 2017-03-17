@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 McDonaldObservatory = EarthLocation.of_site(u'mcdonald')
 HET_FixedAlt = 55 *u.deg
 Tracker_Radius = 8.4 *u.deg
-
+RadiusOfCurvatureHETprimary = 26.164 # meters  Radius of curvature of HET primary mirror
 
 def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
     """ 
@@ -113,16 +113,23 @@ def pupil_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Teles
     input time should be in seconds to this function.
     Transit_time defines the zero epoch of time for the functions.
     """
-    # First generate the tracker motion functions
-    TXoff_calculator, TYoff_calculator = Tracker_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, TelescopePark_AltAz, StarCoo)
+    # The optical axis line of the WFC on tracker, centre of the curvature of primary and the star, should always fall in a straight line. 
+    # The pupil footprint simply shift by the radius of curvature of primary mirror multiplied by the offset angle of the star!
 
-    # According to operaz3.f 
-    # Since tracker both tilts and moves, the footprint of the pupil on the mirror moves double.
+    # No we sample the time into No_of_epochs time epochs for generating an interpolation function
+    No_of_epochs = 100
+    Track_Duration = Track_EndTime - Track_StartTime
+    Epochs_array = Track_StartTime + np.linspace(0,1,No_of_epochs) * Track_Duration
+    
+    frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=McDonaldObservatory)
+    AltAzs_ofStarDuringTrack =  StarCoo.transform_to(frames_DuringTheTrack)
 
-    PupilShiftFactor = 2  
-
-    pXoff_calculator = lambda t : PupilShiftFactor * TXoff_calculator(t)
-    pYoff_calculator = lambda t : PupilShiftFactor * TYoff_calculator(t)
+    pXoff_values = [((altaz.az - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
+    pYoff_values = [(altaz.alt - TelescopePark_AltAz.alt).radian * RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
+    time_seconds = [timedelta.sec for timedelta in  Epochs_array - Transit_time]
+    
+    pXoff_calculator = interpolate.interp1d(time_seconds, pXoff_values, kind='cubic',bounds_error=True)
+    pYoff_calculator = interpolate.interp1d(time_seconds, pYoff_values, kind='cubic',bounds_error=True)
 
     return pXoff_calculator, pYoff_calculator
 
