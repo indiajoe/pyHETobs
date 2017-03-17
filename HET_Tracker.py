@@ -37,7 +37,7 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
         return np.abs(AltDistance.value)
 
     # Minimise time offset to reach as close to HET altitude
-    minimal_time = optimize.minimize(distance_to_HETAlt, 0,bounds=[(0,12)])
+    minimal_time = optimize.minimize(distance_to_HETAlt, 3,bounds=[(0,12)])
 
     if find_east_track:
         time_of_minimum_distance = ZenithCrossTime - minimal_time.x[0] *u.hour 
