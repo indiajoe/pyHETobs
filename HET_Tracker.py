@@ -97,7 +97,18 @@ def Tracker_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Tel
     frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=HETparams.McDonaldObservatory)
     AltAzs_ofStarDuringTrack =  StarCoo.transform_to(frames_DuringTheTrack)
 
-    Xoff_values = [((altaz.az - TelescopePark_AltAz.az)*np.cos(altaz.alt)).value * Deg2Meter_Scale for altaz in AltAzs_ofStarDuringTrack]
+    Xoff_values = []
+    for altaz in AltAzs_ofStarDuringTrack:
+        # PoleCorrection to subtract and remove any sudden jump at the north pole direction when azimuth of the star suddenly change from 0 to 360 degree in a track.
+        if (altaz.az > 270*u.deg) and (TelescopePark_AltAz.az < 90*u.deg): 
+            PoleCorrection = -360*u.deg
+        elif (altaz.az < 90*u.deg) and (TelescopePark_AltAz.az > 270*u.deg): 
+            PoleCorrection = 360*u.deg
+        else:
+            PoleCorrection = 0*u.deg
+
+        Xoff_values.append( ((altaz.az + PoleCorrection - TelescopePark_AltAz.az)*np.cos(altaz.alt)).value * Deg2Meter_Scale )
+
     Yoff_values = [(altaz.alt - TelescopePark_AltAz.alt).value * Deg2Meter_Scale for altaz in AltAzs_ofStarDuringTrack]
     time_seconds = [timedelta.sec for timedelta in  Epochs_array - Transit_time]
     
@@ -124,8 +135,21 @@ def pupil_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Teles
     frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=HETparams.McDonaldObservatory)
     AltAzs_ofStarDuringTrack =  StarCoo.transform_to(frames_DuringTheTrack)
 
-    pXoff_values = [((altaz.az - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * HETparams.RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
+    pXoff_values = []
+
+    for altaz in AltAzs_ofStarDuringTrack:
+        # PoleCorrection to subtract and remove any sudden jump at the north pole direction when azimuth of the star suddenly change from 0 to 360 degree in a track.
+        if (altaz.az > 270*u.deg) and (TelescopePark_AltAz.az < 90*u.deg): 
+            PoleCorrection = -360*u.deg
+        elif (altaz.az < 90*u.deg) and (TelescopePark_AltAz.az > 270*u.deg): 
+            PoleCorrection = 360*u.deg
+        else:
+            PoleCorrection = 0*u.deg
+            
+        pXoff_values.append( ((altaz.az + PoleCorrection - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * HETparams.RadiusOfCurvatureHETprimary )
+
     pYoff_values = [(altaz.alt - TelescopePark_AltAz.alt).radian * HETparams.RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
+
     time_seconds = [timedelta.sec for timedelta in  Epochs_array - Transit_time]
     
     pXoff_calculator = interpolate.interp1d(time_seconds, pXoff_values, kind='cubic',bounds_error=True)
