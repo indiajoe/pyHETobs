@@ -137,3 +137,42 @@ class ObservationBlock(object):
         if (inp_ax is None) and (outputfile is not None):
             fig.savefig(outputfile)
         return ax
+
+
+
+
+
+
+
+
+
+#######################################################
+if __name__ == "__main__":
+    ################################################################################
+    # Plot of how the pupil area changes during the track at various dec values
+    ################################################################################
+    DecRange = np.linspace(-15,75,45)
+    StarList = [SkyCoord(0.0*u.deg, dec*u.deg, frame='icrs') for dec in DecRange]
+    
+    EffPupilAreaDic = {} # Dictionary to store results
+
+    for dec,StarCoo in zip(DecRange,StarList):
+        print('Declination : {0}'.format(dec))
+        try:
+            StarObsBlock = ObservationBlock(StarCoo)
+        except StarNotObservableError:
+            pass
+        else:
+            # Calculate apperture for 2000 points in the total track
+            t = np.linspace(StarObsBlock.max_start_time,StarObsBlock.max_end_time,2000)
+            aper = StarObsBlock.EffectiveHETapperture(t)
+            EffPupilAreaDic[dec] = {'t':t, 'aper':aper }
+    
+    for dec in sorted(EffPupilAreaDic.keys()):
+        plt.plot(EffPupilAreaDic[dec]['t'], EffPupilAreaDic[dec]['aper'],label=str(round(dec,0)),alpha=0.8)
+    plt.legend()
+    plt.grid(True)
+    plt.xlabel('Track time centered on transit (seconds)')
+    plt.ylabel('Effective Aperture (m^2)')
+    plt.savefig('EffectiveHETAreaAcrossDec.png')
+    plt.show()
