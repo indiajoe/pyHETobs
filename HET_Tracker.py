@@ -63,7 +63,9 @@ def start_and_end_of_tracktime(TransitTime,StarCoo,TelescopeAltAz,TrackerRad=Non
             time = TransitTime + deltatime*u.hour
 
         AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time,location=HETparams.McDonaldObservatory))
-        distance_to_HETAltAz = AltAz_ofStar.separation(TelescopeAltAz)
+
+        distance_to_HETAltAz = TelescopeAltAz.separation(AltAz_ofStar)
+
         return np.abs(np.abs(distance_to_HETAltAz.value) - TrackerRad.value)
 
     # First find starting interestion in timewith the tracker circle
