@@ -57,6 +57,9 @@ class ObservationBlock(object):
         print('Duration of Track length = {0.sec} seconds'.format(self.Track_EndTime - self.Track_StartTime))
         #Calculating the pupil's offsef on Primary  tracks..
         self.pXoff_calculator, self.pYoff_calculator = HET_Tracker.pupil_Xoff_Yoff_function(self.Transit_time, self.Track_StartTime, self.Track_EndTime, self.TelescopePark_AltAz, self.StarCoo)
+        # save the max star and end time of the trackes in seconds w.r.t Track transit
+        self.max_end_time = self.pXoff_calculator.max_end_time
+        self.max_start_time = self.pXoff_calculator.max_start_time
 
         # Now create the primary mirror and pupil of HET
         print ('Initialising HET Primary Mirror and Pupil..')

@@ -130,7 +130,9 @@ def pupil_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Teles
     
     pXoff_calculator = interpolate.interp1d(time_seconds, pXoff_values, kind='cubic',bounds_error=True)
     pYoff_calculator = interpolate.interp1d(time_seconds, pYoff_values, kind='cubic',bounds_error=True)
-
+    #Save the max star and end time in seconds of the interpolation function boundry
+    pXoff_calculator.max_end_time = time_seconds[-1]
+    pXoff_calculator.max_start_time = time_seconds[0]
     return pXoff_calculator, pYoff_calculator
 
 
