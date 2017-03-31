@@ -12,7 +12,7 @@ SegmentMirrorApothem = 0.5  # meters # Apothem of hexagonal segment mirror
 Gap = 0.011  # 6.2 to 15.8 mm # 11 mm on average
 
 # list of Bad Mirror segments which has dropped out of the allignemnt
-BadMirrorSegmentCoords = [(+3,7),(+1,7)]  # Format: (+/- column index, row index)  # where row index 0 is the bottom most segment
+BadMirrorSegmentCoords = [] #[(+3,7),(+1,7)]  # Format: (+/- column index, row index)  # where row index 0 is the bottom most segment
 
 
 #################################

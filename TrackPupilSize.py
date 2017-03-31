@@ -16,10 +16,12 @@ class StarNotObservableError(ValueError):
 
 class ObservationBlock(object):
     """ One observation Block on HET """
-    def __init__(self,StarName,east_track=True,otime=None):
+    def __init__(self,StarName,BadMirrorSegmentCoords=None,east_track=True,otime=None):
         """ Define observation block for the input StarName
         Input:
               StarName: (str or SkyCoords) Name of the Star to reolve from Simbad or Direct SkyCoord object.
+              BadMirrorSegmentCoords: (optional) See HETparams.py for default value and format of how to list bad primary mirror segments.
+                                       Example: [(+3,7),(+1,7)]
               east_track : True to observe during east track, False for observe in west track.
               otime : (optional) Day of observation. 
         """
@@ -33,6 +35,8 @@ class ObservationBlock(object):
             self.StarCoo =  StarName
         else:
             print('Error: Unknown object provided as StarName: {0}'.format(StarName))
+        
+        self.BadMirrorSegmentCoords = BadMirrorSegmentCoords
 
         # East or West track
         self.east_track = east_track
@@ -60,10 +64,11 @@ class ObservationBlock(object):
         # save the max star and end time of the trackes in seconds w.r.t Track transit
         self.max_end_time = self.pXoff_calculator.max_end_time
         self.max_start_time = self.pXoff_calculator.max_start_time
+        print('Track starts from {0} seconds to {1} seconds, with transit at 0 sec.'.format(self.max_start_time,self.max_end_time))
 
         # Now create the primary mirror and pupil of HET
         print ('Initialising HET Primary Mirror and Pupil..')
-        self.HETPrimaryMirror = HET_pupil.PrimaryMirror()
+        self.HETPrimaryMirror = HET_pupil.PrimaryMirror(self.BadMirrorSegmentCoords)
         self.HETPupil = HET_pupil.Pupil()
 
 

@@ -10,8 +10,12 @@ import HETparams
 
 class PrimaryMirror(object):
     """ This object is HET's Primary mirror """
-    def __init__(self):
-        """ Create the primary mirror of HET """
+    def __init__(self,BadMirrorSegmentCoords=None):
+        """ Create the primary mirror of HET.
+        Input:
+              BadMirrorSegmentCoords: (optional) See HETparams.py for default value and format of how to list bad primary mirror segments.
+                                     Example: [(+3,7),(+1,7)]
+        """
         # all the coordinates below are on the curved specrical surface of the primary mirrior.
         # so it is a 2D manifold embeded in the 3d world.
 
@@ -32,8 +36,11 @@ class PrimaryMirror(object):
         # Create the primary mirro by shifting the Segment mirrors on to the grid, and the dictionary to number the segments
         self.PrimaryMirrorSegmentsList, self.SegMirrorIndexDic = self.create_primarymirror_segments_and_gridindx(self.PrimaryMirrorGrid)
         
-        # Optinnaly create a list of Bad Mirror segments which has dropped out of the allignemnt
-        self.BadMirrorSegmentCoords = HETparams.BadMirrorSegmentCoords
+        # Optinally create a list of Bad Mirror segments which has dropped out of the allignemnt
+        if BadMirrorSegmentCoords is None:
+            self.BadMirrorSegmentCoords = HETparams.BadMirrorSegmentCoords
+        else:
+            self.BadMirrorSegmentCoords = BadMirrorSegmentCoords
 
         #Union the segments to create a full single Primary mirror of HET
         self.PrimaryMirror = self.generate_combined_primary_mirror(self.PrimaryMirrorSegmentsList,self.BadMirrorSegmentCoords)
