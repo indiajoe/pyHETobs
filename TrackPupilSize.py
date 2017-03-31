@@ -54,7 +54,14 @@ class ObservationBlock(object):
         # Calculating optimal Azimuth and transit time..
         self.Optimal_Azimuth, self.Transit_time = self.calculate_optimalAz_TrackTransit(self.StarCoo,
                                                                                         self.ZenithCrossTime)
-        self.TelescopePark_AltAz = AltAz(az=self.Optimal_Azimuth, alt=HETparams.HET_FixedAlt)
+        self.update_track_properties(Tele_Azimuth=self.Optimal_Azimuth)
+
+    def update_track_properties(self,Tele_Azimuth=None):
+        """ Updates all the track properties when telescope is parked at Tele_Azimuth (u.deg) """
+        if Tele_Azimuth is None:
+           Tele_Azimuth =  self.Optimal_Azimuth
+
+        self.TelescopePark_AltAz = AltAz(az=Tele_Azimuth, alt=HETparams.HET_FixedAlt)
         
         #Calculating Track begin and End time..
         self.Track_StartTime, self.Track_EndTime = HET_Tracker.start_and_end_of_tracktime(self.Transit_time,self.StarCoo,self.TelescopePark_AltAz)
