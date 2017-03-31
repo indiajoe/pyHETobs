@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord, EarthLocation, AltAz, FK5
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
+from scipy import interpolate
 
 import HETparams
 import HET_Tracker 
@@ -143,10 +144,44 @@ class ObservationBlock(object):
             fig.savefig(outputfile)
         return ax
 
+    ### Some more convenience functions #####
+    def random_jitter_func(self,timescale=10,lrange=(0.3,1),mexptime=None,interp_kind='linear'):
+        """ Returns a random jitter function as a function of time. Could be used to model things like jitter in througput due to lose at slit.
+            timescale: (unit:seconds) the timescale in which the jitter function varies randomly.
+            lrange : (min,max) range in which the jitter value should vary randomly.
+            mexptime: (unit:seconds): maximum exposure time to model.[default: maximum track length]
+            interp_kind: (default: 'linear'): interpolation to use between. 
+                           Warning: lrange may not be satisfied if higher order functions are used."""
+        if mexptime is None:
+            mexptime = self.max_end_time - self.max_start_time + timescale
 
+        time = np.arange(0,mexptime,timescale)
+        slitTvalues = np.random.uniform(low=lrange[0],high=lrange[1],size=len(time))
+        f = interpolate.interp1d(time,slitTvalues, kind=interp_kind)
+        return f
 
+    def HETaperture_fun(self,exp_start,aper_calculator=None,max_endtime=None,resolution=1):
+        """ Returns an effective apperture function calculater for HET for the input exp_start for this track object
+        exp_start : the epoch in seconds at which exposure starts. Track tranist is the zero of time axis.
+                        ex: -1000  (should be larger than self.max_start_time)
+        aper_calculator: A function which returns the effective apperture as a function of time centered at Transit time.
+                        (default: self.EffectiveHETapperture )
+        max_endtime : the maximum time upto which observation track exist. 
+                        (default: self.max_end_time)
+        resolution : time resolution (in seconds) to be used in the returned interpolation function.
 
+        """
+        if exp_start < self.max_start_time:
+            print('WARNING: exposure start time provided is before the earliest epoch at which this track object starts.')
+        if aper_calculator is None:
+            aper_calculator = self.EffectiveHETapperture
+        if max_endtime is None:
+            max_endtime = self.max_end_time
 
+        time = np.arange(exp_start,max_endtime,resolution)
+        aperture_values = aper_calculator(time)
+        f = interpolate.interp1d(time-exp_start, aperture_values, kind='cubic')
+        return f
 
 
 
