@@ -2,7 +2,7 @@
 
 import astropy.units as u
 from astropy.time import Time
-from astropy.coordinates import SkyCoord, EarthLocation, AltAz, FK5
+from astropy.coordinates import SkyCoord, EarthLocation, AltAz, FK5, Angle
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
@@ -84,6 +84,8 @@ class ObservationBlock(object):
         """ Returns the time at which star will cross Zenith """
         StarCoo = StarCoo or self.StarCoo
         HA_toStar = ApproxTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.transform_to(FK5(equinox=ApproxTime)).ra
+        if HA_toStar.hour < -12:  # To prevent going to next day
+            HA_toStar = HA_toStar + Angle(24*u.hour)
         ZenithCrossTime = ApproxTime - HA_toStar.hour *u.hour 
         print('{0} will cross zenith at {1}'.format(self.StarName,ZenithCrossTime))
 
