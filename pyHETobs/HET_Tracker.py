@@ -9,6 +9,8 @@ from scipy import optimize
 import sys
 from scipy import interpolate
 import matplotlib.pyplot as plt
+from astroplan import Observer
+from astroplan import FixedTarget
 
 import HETparams
 
@@ -25,24 +27,18 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
          distance_to_HETAlt_min: minimum delta distance to HET's altitude
          time_of_minimum_distance: time of closes approach to HET's altitude
     """
-    def distance_to_HETAlt(deltatime):
-        """ deltatime : (+ve float) in units of hours """
-        if find_east_track:
-            time = ZenithCrossTime - deltatime*u.hour
-        else:
-            time = ZenithCrossTime + deltatime*u.hour
-
-        AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time,location=HETparams.McDonaldObservatory))
-        AltDistance = AltAz_ofStar.alt - HETparams.HET_FixedAlt
-        return np.abs(AltDistance.value)
-
-    # Minimise time offset to reach as close to HET altitude
-    minimal_time = optimize.minimize(distance_to_HETAlt, 3,bounds=[(0,12)])
+    McDobserver = Observer.at_site('McDonald Observatory')
+    Target = FixedTarget(name='Star',coord=StarCoo)
+    alt55crosstime = McDobserver.target_rise_time(ZenithCrossTime,Target,horizon=HETparams.HET_FixedAlt,which='nearest')
+    if alt55crosstime.value < 0:
+        minimal_time = 0 *u.hour
+    else:
+        minimal_time = abs(ZenithCrossTime - alt55crosstime)
 
     if find_east_track:
-        time_of_minimum_distance = ZenithCrossTime - minimal_time.x[0] *u.hour 
+        time_of_minimum_distance = ZenithCrossTime - minimal_time
     else:
-        time_of_minimum_distance = ZenithCrossTime + minimal_time.x[0] *u.hour         
+        time_of_minimum_distance = ZenithCrossTime + minimal_time
 
     AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time_of_minimum_distance,location=HETparams.McDonaldObservatory))
 
