@@ -41,8 +41,8 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
         time_of_minimum_distance = ZenithCrossTime + minimal_time
 
     AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time_of_minimum_distance,location=HETparams.McDonaldObservatory))
-
-    return AltAz_ofStar.az, distance_to_HETAlt(minimal_time.x[0]), time_of_minimum_distance
+    distance_to_HETAlt = np.abs((AltAz_ofStar.alt - HETparams.HET_FixedAlt).value)
+    return AltAz_ofStar.az, distance_to_HETAlt, time_of_minimum_distance
 
 
 
