@@ -222,6 +222,24 @@ class HET_Telescope(object):
         pXoff, pYoff = HET_Tracker.pupil_Xoff_Yoff_foraltaz(altaz,self.TelescopePark_AltAz)
         EffPupil = self.HETPupil.EffectiveActivePupil(self.HETPrimaryMirror.PrimaryMirror, xoff=pXoff,yoff=pYoff)
         return EffPupil
+
+    def plot_pupil(self,EffPupil,alpha=0.4,color="g",inp_ax=None,outputfile=None):
+        """ Plots the input effective apperture of the telscope """
+        if inp_ax is None:
+            fig, ax = plt.subplots(figsize=(8, 8))
+        else:
+            ax = inp_ax
+
+        for polygon in EffPupil:
+            mpl_poly = Polygon(np.array(polygon.exterior), facecolor=color, lw=0, alpha=alpha)
+            ax.add_patch(mpl_poly)
+
+        ax.set_xlim(-6,6)
+        ax.set_ylim(-6,6)
+        ax.set_aspect('equal')
+        if (inp_ax is None) and (outputfile is not None):
+            fig.savefig(outputfile)
+        return ax
         
 
 #######################################################
