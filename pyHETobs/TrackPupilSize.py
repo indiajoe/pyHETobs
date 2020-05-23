@@ -193,7 +193,36 @@ class ObservationBlock(object):
         return f
 
 
+class HET_Telescope(object):
+    """ HET Telescope object """
+    def __init__(self,park_azimuth=None,BadMirrorSegmentCoords=None):
+        """
+        Parameters
+        ----------
+        park_azimuth : float
+                     Azimuth at which the telescope is parked
+        BadMirrorSegmentCoords: (optional) See HETparams.py for default value and format of how to list bad primary mirror segments.
+                                 Example: [(+3,7),(+1,7)]
+        
+        """
+        self.park_azimuth = park_azimuth
+        self.BadMirrorSegmentCoords = BadMirrorSegmentCoords
+        # Now create the primary mirror and pupil of HET
+        print ('Initialising HET Primary Mirror and Pupil..')
+        self.HETPrimaryMirror = HET_pupil.PrimaryMirror(self.BadMirrorSegmentCoords)
+        self.HETPupil = HET_pupil.Pupil()
+        
+    @property
+    def TelescopePark_AltAz(self):
+        """ Telescope parked AltAz object """
+        return AltAz(az=self.park_azimuth, alt=HETparams.HET_FixedAlt)
 
+    def get_effective_pupil(self,altaz):
+        """ Returns the effective pupil while telescope is looking at an input `altaz` """
+        pXoff, pYoff = HET_Tracker.pupil_Xoff_Yoff_foraltaz(altaz,self.TelescopePark_AltAz)
+        EffPupil = self.HETPupil.EffectiveActivePupil(self.HETPrimaryMirror.PrimaryMirror, xoff=pXoff,yoff=pYoff)
+        return EffPupil
+        
 
 #######################################################
 if __name__ == "__main__":
