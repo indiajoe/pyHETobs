@@ -5,8 +5,8 @@ from astropy.time import Time, TimeDelta
 from astroplan import Observer
 from astroplan import FixedTarget
 from astropy.coordinates import SkyCoord
-from pyHETobs import ObservationBlock
-from TrackPupilSize import StarNotObservableError
+from .TrackPupilSize import ObservationBlock
+from .TrackPupilSize import StarNotObservableError
 
 import astropy.units as u
 import numpy as np

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from astroplan import Observer
 from astroplan import FixedTarget
 
-import HETparams
+from . import HETparams
 
 
 def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):

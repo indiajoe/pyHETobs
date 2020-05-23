@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from scipy import interpolate
 
-import HETparams
-import HET_Tracker 
-import HET_pupil
+from . import HETparams
+from . import HET_Tracker 
+from . import HET_pupil
 
 class StarNotObservableError(ValueError):
     """ To be raised when the star is not observable or not identified """

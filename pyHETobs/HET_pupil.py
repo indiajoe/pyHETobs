@@ -6,7 +6,7 @@ from shapely.ops import transform
 import numpy as np
 import matplotlib.pyplot as plt
 
-import HETparams
+from . import HETparams
 
 class PrimaryMirror(object):
     """ This object is HET's Primary mirror """
