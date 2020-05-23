@@ -131,20 +131,7 @@ def pupil_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Teles
     frames_DuringTheTrack = AltAz(obstime=Epochs_array, location=HETparams.McDonaldObservatory)
     AltAzs_ofStarDuringTrack =  StarCoo.transform_to(frames_DuringTheTrack)
 
-    pXoff_values = []
-
-    for altaz in AltAzs_ofStarDuringTrack:
-        # PoleCorrection to subtract and remove any sudden jump at the north pole direction when azimuth of the star suddenly change from 0 to 360 degree in a track.
-        if (altaz.az > 270*u.deg) and (TelescopePark_AltAz.az < 90*u.deg): 
-            PoleCorrection = -360*u.deg
-        elif (altaz.az < 90*u.deg) and (TelescopePark_AltAz.az > 270*u.deg): 
-            PoleCorrection = 360*u.deg
-        else:
-            PoleCorrection = 0*u.deg
-            
-        pXoff_values.append( ((altaz.az + PoleCorrection - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * HETparams.RadiusOfCurvatureHETprimary )
-
-    pYoff_values = [(altaz.alt - TelescopePark_AltAz.alt).radian * HETparams.RadiusOfCurvatureHETprimary for altaz in AltAzs_ofStarDuringTrack]
+    pXoff_values, pYoff_values = zip(*[pupil_Xoff_Yoff_foraltaz(altaz,TelescopePark_AltAz) for altaz in AltAzs_ofStarDuringTrack])
 
     time_seconds = [timedelta.sec for timedelta in  Epochs_array - Transit_time]
     
@@ -155,6 +142,25 @@ def pupil_Xoff_Yoff_function(Transit_time, Track_StartTime, Track_EndTime, Teles
     pXoff_calculator.max_start_time = time_seconds[0]
     return pXoff_calculator, pYoff_calculator
 
+def pupil_Xoff_Yoff_foraltaz(altaz,TelescopePark_AltAz):
+    """
+    Returns the instantanious Xoff and Yoff in pupil while telescope parked at `TelescopePark_AltAz` is staring at `altaz`
+    """
+    # The optical axis line of the WFC on tracker, centre of the curvature of primary and the star, should always fall in a straight line. 
+    # The pupil footprint simply shift by the radius of curvature of primary mirror multiplied by the offset angle of the star!
+
+
+    # PoleCorrection to subtract and remove any sudden jump at the north pole direction when azimuth of the star suddenly change from 0 to 360 degree in a track.
+    if (altaz.az > 270*u.deg) and (TelescopePark_AltAz.az < 90*u.deg): 
+        PoleCorrection = -360*u.deg
+    elif (altaz.az < 90*u.deg) and (TelescopePark_AltAz.az > 270*u.deg): 
+        PoleCorrection = 360*u.deg
+    else:
+        PoleCorrection = 0*u.deg
+    pXoff = ((altaz.az + PoleCorrection - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * HETparams.RadiusOfCurvatureHETprimary
+    pYoff = (altaz.alt - TelescopePark_AltAz.alt).radian * HETparams.RadiusOfCurvatureHETprimary
+    return pXoff, pYoff
+    
 
 #######################################################
 if __name__ == "__main__":
