@@ -158,7 +158,7 @@ def pupil_Xoff_Yoff_foraltaz(altaz,TelescopePark_AltAz):
     else:
         PoleCorrection = 0*u.deg
     pXoff = ((altaz.az + PoleCorrection - TelescopePark_AltAz.az)*np.cos(altaz.alt)).radian * HETparams.RadiusOfCurvatureHETprimary
-    pYoff = (altaz.alt - TelescopePark_AltAz.alt).radian * HETparams.RadiusOfCurvatureHETprimary
+    pYoff = -(altaz.alt - TelescopePark_AltAz.alt).radian * HETparams.RadiusOfCurvatureHETprimary
     return pXoff, pYoff
     
 

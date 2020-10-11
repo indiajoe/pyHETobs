@@ -39,5 +39,18 @@ Tracker_Radius = 8.4 *u.deg
 from astropy.coordinates import EarthLocation
 
 McDonaldObservatory = EarthLocation.of_site(u'mcdonald')
-HET_FixedAlt = 55 *u.deg
+HET_FixedAlt = 55. *u.deg
 
+
+##############################
+# CCAS Tower shadow numbers
+##############################
+CCAS_azimuth = 68.593 *u.deg
+
+TelescopePierToCC = 16.433  #meters, Horizontal distance from telescope pier to CC
+
+CCASDia = 4.191  #meters, Diamter of CCAS dome
+
+CCAScenter = 0, -1.518  #meters, Position of the Dome circle center with respect to CC
+
+CCASwidth = 2.134   #meters,  Width of the CCAS tower cylinder
