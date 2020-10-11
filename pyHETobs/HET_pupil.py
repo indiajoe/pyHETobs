@@ -140,6 +140,60 @@ class PrimaryMirror(object):
         return PrimaryMirror
 
 
+def project_CCAS_shadow_to_pupil(InputPupilShape,star_altaz,telescopeAz):
+    """ Returns the OuputPupilShape after projecting the CCAS tower shadow
+    from the star at atar_atlaz while telescope is parked at telescopeAz"""
+
+    # Coorindate sytem used in the claulcation here is with CC  (center of curvature location of parked telescope) as origin,
+    # X axis is towards right when looking at primary mirror sitting in the star/sky
+    # Y axis is vertically up. And Z axis is horixontal from the CC away from the telescope pier axis.
+
+    CCAS_CC_deltaAzim = HETparams.CCAS_azimuth - telescopeAz.az
+    if np.abs(CCAS_CC_deltaAzim.radian*HETparams.TelescopePierToCC) > 1.5*HETparams.PupilDia/2.0:  # 1.5 is just an extra margin
+        # No obsuration from CCAS possible
+        return InputPupilShape
+
+    # Calculate the location of the CCAS tower with respect to the center of curvature
+    CCAS_X = np.sin(-CCAS_CC_deltaAzim)*HETparams.TelescopePierToCC
+    CCAS_Z = np.cos(CCAS_CC_deltaAzim)*HETparams.TelescopePierToCC - HETparams.TelescopePierToCC
+    CCAS_Y = 0  # Since CCAS tower's Y axis hight position is always same as CC
+
+    # Calculate the unit vector from the star passing through the CC, pointing towards the primary mirror
+    star_tel_deltaAzim = star_altaz.az - telescopeAz.az
+    starToCC_vector = np.array([np.cos(star_altaz.alt)*np.sin(star_tel_deltaAzim),-np.sin(star_altaz.alt),-np.cos(star_altaz.alt)*np.cos(star_tel_deltaAzim)])
+
+    # Calculate the projection of the position vector of the CCAS tower to the starToCC_vector in the direction of starToCC_vector
+    project_CCAS_starToCC = np.dot(np.array([CCAS_X,CCAS_Y,CCAS_Z]),starToCC_vector) * starToCC_vector
+
+    # Calculate the distance vector form the starToCC_vector to the CCAS tower
+    projected_distance_CC_to_CCAS = np.array([CCAS_X,CCAS_Y,CCAS_Z]) - project_CCAS_starToCC
+
+    # radial distance fomr CC of the pupil to the CCAS point
+    rad = np.linalg.norm(projected_distance_CC_to_CCAS)
+    # rotated x axis of the pupil face when the star azimuth changes. (rotation along the Y axis)
+    rotated_pupil_xaxis = np.array([np.cos(star_tel_deltaAzim),0,np.sin(star_tel_deltaAzim)])
+
+    # Projection of the distance to the CCAS tower vector on to this ne azimuth rotated X axis unit vector.
+    Xoff_CCAS_in_pupil = np.dot(projected_distance_CC_to_CCAS,rotated_pupil_xaxis)
+
+    # Using the fact that the projected_distance_CC_to_CCAS, rotated X axis and the Atlitude rotated Y axis falls in the same plane
+    # We use the pythogoras theorem to calculate the projection on the rotate y axis plane.
+    Yoff_CCAS_in_pupil = np.sqrt(rad**2 - Xoff_CCAS_in_pupil**2)* np.sign(star_altaz.alt - HETparams.HET_FixedAlt)
+
+    print('CCAS shadow shift in pupil plane {0},{1}'.format(Xoff_CCAS_in_pupil,Yoff_CCAS_in_pupil))
+
+    # CCAS Shadow shape
+    CCAStopCircle = Point(HETparams.CCAScenter[0],HETparams.CCAScenter[1]).buffer(HETparams.CCASDia/2.0)
+    CCAStowerCylinder = Polygon([(-HETparams.CCASwidth/2.0,HETparams.CCAScenter[1]),(+HETparams.CCASwidth/2.0,HETparams.CCAScenter[1]),
+                                 (+HETparams.CCASwidth/2.0,HETparams.CCAScenter[1]-10),(-HETparams.CCASwidth/2.0,HETparams.CCAScenter[1]-10)])
+    CCASshadow = CCAStopCircle.union(CCAStowerCylinder)
+
+    # Now move the CCAS tower Shadow to the Xoff_CCAS_in_pupil, Yoff_CCAS_in_pupil in pupil plane
+    ShiftedCCASshadow = translate(CCASshadow,xoff=Xoff_CCAS_in_pupil,yoff=Yoff_CCAS_in_pupil)
+
+    return InputPupilShape.difference(ShiftedCCASshadow)
+
+
 class Pupil(object):
     """ Illumintaed Active Pupil of HET """
     def __init__(self):
