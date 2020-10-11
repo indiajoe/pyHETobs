@@ -22,8 +22,8 @@ BadMirrorSegmentCoords = [] #[(+3,7),(+1,7)]  # Format: (+/- column index, row i
 PupilDia = 10.0 # meters # Outer diameter of the WFC pupil on Primary mirror
 CentralShadowDiaWFC = 4.5 # meter # Diameter of the central obscuration.
 # Support beams holding the WFC on top.
-BeamPosition = 1.8 # meters on both side # position of the two beam's shadow from the center of the pupil
-BeamWidth = 0.64 # meters  # width of the beam shadow
+BeamPosition = 1.3 # meters on both side # position of the two beam's shadow from the center of the pupil
+BeamWidth = 0.29 # meters  # width of the beam shadow
 
 
 #################################
