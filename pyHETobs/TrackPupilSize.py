@@ -220,7 +220,10 @@ class HET_Telescope(object):
     def get_effective_pupil(self,altaz):
         """ Returns the effective pupil while telescope is looking at an input `altaz` """
         pXoff, pYoff = HET_Tracker.pupil_Xoff_Yoff_foraltaz(altaz,self.TelescopePark_AltAz)
-        EffPupil = self.HETPupil.EffectiveActivePupil(self.HETPrimaryMirror.PrimaryMirror, xoff=pXoff,yoff=pYoff)
+
+        primary_pupil = HET_pupil.project_CCAS_shadow_to_pupil(self.HETPupil.FullPupilShape,altaz,self.TelescopePark_AltAz)
+
+        EffPupil = self.HETPupil.EffectiveActivePupil(self.HETPrimaryMirror.PrimaryMirror, PupilShape=primary_pupil, xoff=pXoff,yoff=pYoff)
         return EffPupil
 
     def plot_pupil(self,EffPupil,alpha=0.4,color="g",inp_ax=None,outputfile=None):
