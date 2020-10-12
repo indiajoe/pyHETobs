@@ -28,14 +28,15 @@ def HETPupilPlot(Target, ObsTime, Obslocation, ParkAzimuth, ObjAltAz,
     fig = plt.figure(constrained_layout=True)
     gs = gridspec.GridSpec(2, 3, wspace=0.7, hspace=0.3,)
     ax1 = fig.add_subplot(gs[0:2, 0:2])
+    FullPupil = HET.HETPrimaryMirror.generate_combined_primary_mirror()
     EffPupil = HET.get_effective_pupil(ObjAltAz)
     PupilArea = EffPupil.area
     Coordinates = EffPupil.centroid.coords.xy
-    ax1 = HET.plot_pupil(EffPupil, inp_ax=ax1)
-    ax1.plot(Coordinates[0][0], Coordinates[1][0], 'X', markersize=20, color='r')
+    ax1 = HET.plot_pupil(FullPupil, inp_ax=ax1, color='grey', alpha=0.2)
+    ax1 = HET.plot_pupil(EffPupil, inp_ax=ax1, alpha=0.5)
+    ax1.plot(Coordinates[0][0], Coordinates[1][0], 'x', markersize=12, color='r')
     ax1.xaxis.set_ticks(np.arange(-6, 7, 2))
     ax1.yaxis.set_ticks(np.arange(-6, 7, 2))
-
     ax1.set_xlim(-6.2, 6.2)
     ax1.set_xlabel("Mirror X (m)", size=15,  fontweight ='bold')
     ax1.set_ylim(-6.2, 6.2)
