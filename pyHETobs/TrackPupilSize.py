@@ -254,7 +254,9 @@ if __name__ == "__main__":
     StarList = [SkyCoord(0.0*u.deg, dec*u.deg, frame='icrs') for dec in DecRange]
     
     EffPupilAreaDic = {} # Dictionary to store results
-
+    MaxPupilSize = []
+    MaxTrackDuration = []
+    DecOfStar = []
     for dec,StarCoo in zip(DecRange,StarList):
         print('Declination : {0}'.format(dec))
         try:
@@ -266,6 +268,9 @@ if __name__ == "__main__":
             t = np.linspace(StarObsBlock.max_start_time,StarObsBlock.max_end_time,2000)
             aper = StarObsBlock.EffectiveHETapperture(t)
             EffPupilAreaDic[dec] = {'t':t, 'aper':aper }
+            DecOfStar.append(dec)
+            MaxTrackDuration.append(StarObsBlock.max_end_time-StarObsBlock.max_start_time)
+            MaxPupilSize.append(StarObsBlock.EffectiveHETapperture([0]))
     
     for dec in sorted(EffPupilAreaDic.keys()):
         plt.plot(EffPupilAreaDic[dec]['t'], EffPupilAreaDic[dec]['aper'],label=str(round(dec,0)),alpha=0.8)
@@ -273,5 +278,14 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.xlabel('Track time centered on transit (seconds)')
     plt.ylabel('Effective Aperture (m^2)')
-    plt.savefig('EffectiveHETAreaAcrossDec.png')
+    # plt.savefig('EffectiveHETAreaAcrossDec.png')
+    plt.show()
+    # Plot the max size and time as a function of dec
+    plt.plot(DecOfStar,MaxTrackDuration,'.')
+    plt.xlabel('Declination')
+    plt.ylabel('Max track length')
+    plt.show()
+    plt.plot(DecOfStar,MaxPupilSize,'.')
+    plt.xlabel('Declination')
+    plt.ylabel('Max HET pupil size')
     plt.show()
