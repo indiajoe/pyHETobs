@@ -83,7 +83,7 @@ class ObservationBlock(object):
     def calculate_ZenithCrossTime(self,ApproxTime,StarCoo = None):
         """ Returns the time at which star will cross Zenith """
         StarCoo = StarCoo or self.StarCoo
-        HA_toStar = ApproxTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.transform_to(FK5(equinox=ApproxTime)).ra
+        HA_toStar = ApproxTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.lon) - StarCoo.transform_to(FK5(equinox=ApproxTime)).ra
         if HA_toStar.hour < -12:  # To prevent going to next day
             HA_toStar = HA_toStar + Angle(24*u.hour)
         ZenithCrossTime = ApproxTime - HA_toStar.hour *u.hour 

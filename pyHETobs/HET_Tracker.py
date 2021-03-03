@@ -29,11 +29,15 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
     """
     McDobserver = Observer.at_site('McDonald Observatory')
     Target = FixedTarget(name='Star',coord=StarCoo)
-    alt55crosstime = McDobserver.target_rise_time(ZenithCrossTime,Target,horizon=HETparams.HET_FixedAlt,which='nearest')
-    if alt55crosstime.value < 0:
+    try:
+        alt55crosstime = McDobserver.target_rise_time(ZenithCrossTime,Target,horizon=HETparams.HET_FixedAlt,which='nearest')
+    except TypeError:
         minimal_time = 0 *u.hour
     else:
-        minimal_time = abs(ZenithCrossTime - alt55crosstime)
+        if alt55crosstime.value < 0:
+            minimal_time = 0 *u.hour
+        else:
+            minimal_time = abs(ZenithCrossTime - alt55crosstime)
 
     if find_east_track:
         time_of_minimum_distance = ZenithCrossTime - minimal_time
@@ -169,7 +173,7 @@ if __name__ == "__main__":
 
     CurrentTime = Time.now()
     # First calculate the Zenith corssing time of the star
-    HA_toStar = CurrentTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.longitude) - StarCoo.ra
+    HA_toStar = CurrentTime.sidereal_time('apparent',longitude=HETparams.McDonaldObservatory.lon) - StarCoo.ra
     ZenithCrossTime = CurrentTime - HA_toStar.hour *u.hour 
 
     print('{0} will cross zenith at {1}'.format(StarName,ZenithCrossTime))
