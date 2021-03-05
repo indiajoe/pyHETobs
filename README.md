@@ -1,6 +1,8 @@
 # pyHETobs
 Package to calculate various HET, McDonald Observatory parameters for planning observations.
 
+[![DOI](https://zenodo.org/badge/98679349.svg)](https://zenodo.org/badge/latestdoi/98679349)
+
 ## Includes
 + Tools to calculate effective HET pupil accurately.
 + Tools to calculate track lengths, effective area for different target observations etc.
@@ -8,6 +10,7 @@ Package to calculate various HET, McDonald Observatory parameters for planning o
 
 ## How to use it
 clone this module to local computer
+
 `pip install -e /path/to/pyHETobs`
 
 
