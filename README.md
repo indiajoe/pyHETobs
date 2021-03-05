@@ -4,10 +4,11 @@ Package to calculate various HET, McDonald Observatory parameters for planning o
 ## Includes
 + Tools to calculate effective HET pupil accurately.
 + Tools to calculate track lengths, effective area for different target observations etc.
++ Tools to calculate the shadow the CCAS tower on the HET pupil
 
 ## How to use it
-install dependency modules in requirements.txt
-Add this module directory into PYTHONPATH and `import pyHETobs`
+clone this module to local computer
+`pip install -e /path/to/pyHETobs`
 
 
 ## Example plots
