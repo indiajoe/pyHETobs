@@ -1,5 +1,6 @@
+#!/usr/bin/env python
+""" This is an example script to make the plot of HET's pupil for a Target at selectd OBSTIME """ 
 import numpy as np
-import pandas as pd
 from astropy.time import Time
 import astropy.units as u
 import matplotlib
@@ -21,6 +22,8 @@ def HETPupilPlot(Target, ObsTime, Obslocation, ParkAzimuth, ObjAltAz,
         ObjAltAz: AltAz AStropy object for ObsTime
         InsertAltitude: Insert Altitude plot. Default is False
         InsertPupilArea: Insert PupilArea vs Time plot. Default is False
+    RETURNS:
+        fig, ax1, Coordinates, PupilArea
     """
     # ParkAzimuth = Slope_Header['STRTAZ'] * u.deg
     HET = pyHETobs.TrackPupilSize.HET_Telescope(park_azimuth=ParkAzimuth)
