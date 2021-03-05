@@ -34,7 +34,7 @@ def find_HET_optimal_azimuth(StarCoo,ZenithCrossTime,find_east_track=True):
     except TypeError:
         minimal_time = 0 *u.hour
     else:
-        if alt55crosstime.value < 0:
+        if np.ma.is_masked(alt55crosstime.value) or (alt55crosstime.value < 0):
             minimal_time = 0 *u.hour
         else:
             minimal_time = abs(ZenithCrossTime - alt55crosstime)
