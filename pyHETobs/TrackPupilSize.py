@@ -142,8 +142,8 @@ class ObservationBlock(object):
         else:
             ax = inp_ax
 
-        for polygon in EffPupil:
-            mpl_poly = Polygon(np.array(polygon.exterior), facecolor=color, lw=0, alpha=alpha)
+        for polygon in EffPupil.geoms:
+            mpl_poly = Polygon(np.array(polygon.exterior.coords), facecolor=color, lw=0, alpha=alpha)
             ax.add_patch(mpl_poly)
 
         ax.set_xlim(-6,6)
