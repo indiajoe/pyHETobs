@@ -63,9 +63,8 @@ def start_and_end_of_tracktime(TransitTime,StarCoo,TelescopeAltAz,TrackerRad=Non
             time = TransitTime + deltatime*u.hour
 
         AltAz_ofStar =  StarCoo.transform_to(AltAz(obstime=time,location=HETparams.McDonaldObservatory))
-
-        distance_to_HETAltAz = TelescopeAltAz.separation(AltAz_ofStar)
-
+        TelescopeAltAz_attime = SkyCoord(alt=TelescopeAltAz.alt, az=TelescopeAltAz.az, frame=AltAz(obstime=time,location=HETparams.McDonaldObservatory))
+        distance_to_HETAltAz = TelescopeAltAz_attime.separation(AltAz_ofStar)
         return np.abs(np.abs(distance_to_HETAltAz.value) - TrackerRad.value)
 
     # First find starting interestion in timewith the tracker circle
@@ -189,7 +188,7 @@ if __name__ == "__main__":
     print('Optimal Azimuth to park telescope is at: {0}'.format(Optimal_Azimuth))
 
 
-    TelescopePark_AltAz = AltAz(az=Optimal_Azimuth, alt=HETparams.HET_FixedAlt)
+    TelescopePark_AltAz = SkyCoord(alt=HETparams.HET_FixedAlt, az=Optimal_Azimuth, frame=AltAz(location=HETparams.McDonaldObservatory))
 
     print('Calculating Track begin and End time..')
     Track_StartTime, Track_EndTime = start_and_end_of_tracktime(Transit_time,StarCoo,TelescopePark_AltAz,HETparams.Tracker_Radius)
@@ -227,7 +226,7 @@ if __name__ == "__main__":
         print('Optimal Azimuth to park telescope is at: {0}'.format(Optimal_Azimuth))
 
 
-        TelescopePark_AltAz = AltAz(az=Optimal_Azimuth, alt=HETparams.HET_FixedAlt)
+        TelescopePark_AltAz = SkyCoord(alt=HETparams.HET_FixedAlt, az=Optimal_Azimuth, frame=AltAz(location=HETparams.McDonaldObservatory))
 
         print('Calculating Track begin and End time..')
         Track_StartTime, Track_EndTime = start_and_end_of_tracktime(Transit_time,StarCoo,TelescopePark_AltAz,HETparams.Tracker_Radius)

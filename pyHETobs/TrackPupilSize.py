@@ -61,7 +61,7 @@ class ObservationBlock(object):
         if Tele_Azimuth is None:
            Tele_Azimuth =  self.Optimal_Azimuth
 
-        self.TelescopePark_AltAz = AltAz(az=Tele_Azimuth, alt=HETparams.HET_FixedAlt)
+        self.TelescopePark_AltAz = SkyCoord(alt=HETparams.HET_FixedAlt, az=Tele_Azimuth, frame=AltAz(location=HETparams.McDonaldObservatory))
         
         #Calculating Track begin and End time..
         self.Track_StartTime, self.Track_EndTime = HET_Tracker.start_and_end_of_tracktime(self.Transit_time,self.StarCoo,self.TelescopePark_AltAz)
@@ -215,7 +215,7 @@ class HET_Telescope(object):
     @property
     def TelescopePark_AltAz(self):
         """ Telescope parked AltAz object """
-        return AltAz(az=self.park_azimuth, alt=HETparams.HET_FixedAlt)
+        return SkyCoord(alt=HETparams.HET_FixedAlt, az=self.park_azimuth, frame=AltAz(location=HETparams.McDonaldObservatory))
 
     def get_effective_pupil(self,altaz):
         """ Returns the effective pupil while telescope is looking at an input `altaz` """
